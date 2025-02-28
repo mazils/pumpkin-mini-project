@@ -23,3 +23,4 @@ Thumbs.db
 
 # Ignore all images in the first miniproject folder
 Images for first miniproject/*
+Data/*
