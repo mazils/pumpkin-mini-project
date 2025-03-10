@@ -43,11 +43,11 @@ with rasterio.open(ortho_file) as src:
     img = src.read(window=window_location)
     print(img.shape)
     # cv.imwrite(ortho_path + "/test.png", img)
-    temp = img.transpose(1, 2, 0)
-    t2 = cv.split(temp)
-    img_cv = cv.merge([t2[2], t2[1], t2[0]])
-    cv.imshow("test", img_cv)
-    cv.waitKey(0)
+    # temp = img.transpose(1, 2, 0)
+    # t2 = cv.split(temp)
+    # img_cv = cv.merge([t2[2], t2[1], t2[0]])
+    # cv.imshow("test", img_cv)
+    # cv.waitKey(0)
                                   
                       
                    

@@ -1,5 +1,14 @@
 import cv2
 import numpy as np
+import os
+
+script_dir = os.path.dirname(__file__)
+input_rel = "../figures"
+annotated_rel = "../annotated-images"  
+output_rel = "../processed-images"
+input_path = os.path.join(script_dir, input_rel)
+output_path = os.path.join(script_dir, output_rel)
+annotated_path = os.path.join(script_dir, annotated_rel)
 
 class PumpkinCounter():
     def __init__(self,verbose=False):
@@ -25,10 +34,12 @@ class PumpkinCounter():
         return BlobCount,EdgeBlobs
 
     def _LoadReferenceImage(self):
-        image_name = "EB-02-660_0595_0435"
-        image = "Data/Images/" + image_name + ".JPG"
-        image_annoted = "Data/Images_annotated/" + image_name + ".png"
+        # image_name = "EB-02-660_0595_0435"
+        # image = "Data/Images/" + image_name + ".JPG"
+        # image_annoted = "Data/Images_annotated/" + image_name + ".png"
 
+        image = input_path + "/EB-02-660_0595_0435.JPG"
+        image_annoted = annotated_path + "/EB-02-660_0595_0435.png"  
         # Load images
         image = cv2.imread(image)
         image_annoted = cv2.imread(image_annoted)
@@ -115,8 +126,10 @@ class PumpkinCounter():
         return Pumking_Count, EdgeBlobsOut
 
 def __DebugLoadTestImage():
-    image_name = "EB-02-660_0595_0435"
-    image = "Data/Images/" + image_name + ".JPG"
+    
+    image = input_path + "/EB-02-660_0595_0435.JPG"
+    # image_name = "EB-02-660_0595_0435"
+    # image = "Data/Images/" + image_name + ".JPG"
 
     # Load images
     image = cv2.imread(image)
