@@ -18,20 +18,25 @@ class PumpkinCounter():
         if self._verbose:
             print("Finish Loading Annotations")
 
-    def ProcessImage(self,image):
-        binary_Image=self._SegmentColors(image)
+    def ProcessImage(self, image: np.ndarray, mins: np.ndarray, maxs: np.ndarray) -> int:
+        binary_Image = self._SegmentColors(image)
         if self._verbose:
             print("Finish Segmentation")
 
-        numBlobs,blobMap=self._FindBlobs(binary_Image)
+        numBlobs, blobMap = self._FindBlobs(binary_Image)
         if self._verbose:
             print("Finish Finding Blobs")
 
-        BlobCount,EdgeBlobs=self._ProcessBlobs(numBlobs,blobMap)
+        blobCounts, Blobs = self._ExtractBlobList(numBlobs, blobMap)
         if self._verbose:
-            print("Finish Processing Image")
+            print("Finish Processing Blobs")
 
-        return BlobCount,EdgeBlobs
+        blobCounts = self._ProcessBlobCounts(blobCounts)
+        blobCount = self._ProcessBlobList(blobCounts, Blobs, mins, maxs)
+        if self._verbose:
+            print("Finish Counting")
+
+        return int(blobCount)
 
     def _LoadReferenceImage(self):
         # image_name = "EB-02-660_0595_0435"
@@ -79,51 +84,44 @@ class PumpkinCounter():
     def _FindBlobs(self,binary_image):
         num_labels, labels_im = cv2.connectedComponents(binary_image.astype("uint8"))
         return num_labels, labels_im
+    
 
-
-    def _ProcessBlobs(self,numlabels, labels_im):
+    def _ExtractBlobList(self,numlabels, labels_im):
         img_shape = labels_im.shape
-        EdgeBlobs = dict()
         BlobCounts = np.zeros(numlabels)
+        Blobs=dict()
         for x in range(img_shape[0]):
             for y in range(img_shape[1]):
                 if labels_im[x, y] == 0:
                     continue
 
                 blob_label = labels_im[x, y]
-                if self._isEdge(x, y, img_shape):
-                    if blob_label in EdgeBlobs.keys():
-                        EdgeBlobs[blob_label].append(np.array([x, y]))
-                    else:
-                        EdgeBlobs[blob_label] = [np.array([x, y])]
+                if blob_label in Blobs.keys():
+                    Blobs[blob_label].append(np.array([x, y]))
                 else:
-                    BlobCounts[blob_label] = BlobCounts[blob_label] + 1
+                    Blobs[blob_label] = [np.array([x, y])]
+                BlobCounts[blob_label] = BlobCounts[blob_label] + 1
 
-        return self._CleanUp(BlobCounts, EdgeBlobs)
-
-
-    def _isEdge(self,x, y, img_shape):
-        if x == 0 or y == 0:
-            return True
-        elif x == img_shape[0] or y == img_shape[1]:
-            return True
-        else:
-            return False
-
-
-    def _CleanUp(self,BlobCounts, EdgeBlobs):
+        return BlobCounts,Blobs
+    
+    def _ProcessBlobCounts(self,blobCounts):
         # filter out small blobs
-        BlobCounts[BlobCounts < 20] = 0
-        BlobCounts[np.logical_and(BlobCounts > 0, BlobCounts < 100)] = 1
-        BlobCounts[BlobCounts > 100] = (BlobCounts[BlobCounts > 100] / 100).astype(np.int16)
+        blobCounts[blobCounts < 20] = 0
+        blobCounts[np.logical_and(blobCounts > 0, blobCounts < 100)] = 1
+        blobCounts[blobCounts > 100] = (blobCounts[blobCounts > 100] / 100).astype(np.int16)
+        return blobCounts
+    
+    def _ProcessBlobList(self,blobCounts,blobs,mins,maxs):
+        for i in range(len(blobCounts)):
+            if blobCounts[i]==0:
+                continue
 
-        Pumking_Count = int(BlobCounts.sum())
+            pixels=np.array(blobs[i])
+            mean=pixels.mean(axis=0)
+            if (mean<mins).any() or (mean>maxs).any():
+                blobCounts[i]=0
+        return blobCounts.sum()
 
-        EdgeBlobsOut = list()
-        for blob in EdgeBlobs.keys():
-            tmp = np.array(EdgeBlobs[blob])
-            EdgeBlobsOut.append(tmp)
-        return Pumking_Count, EdgeBlobsOut
 
 def __DebugLoadTestImage():
     
@@ -140,4 +138,7 @@ def __DebugLoadTestImage():
 
 if __name__=="__main__":
     Pc=PumpkinCounter(verbose=True)
-    print(Pc.ProcessImage(__DebugLoadTestImage()))
+    testImg=__DebugLoadTestImage()
+    mins=np.array((1000,1000))
+    maxs=np.array((testImg.shape[0]-1000,testImg.shape[1]-1000))
+    print(Pc.ProcessImage(testImg,mins,maxs))
