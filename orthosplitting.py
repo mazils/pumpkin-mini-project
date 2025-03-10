@@ -98,6 +98,11 @@ class OrthoSplitter:
                 print(f"Tile {i}_{j} written to output file")
 
         
+    def combine_tiles(self, tiles):
+        """
+        Combine the tiles into a single image
+        """
+        pass
         
     def write_ortho(self, img=None):
         if img is None:
@@ -115,6 +120,7 @@ def main():
     ortho_splitter.load_ortho()
     ortho_splitter.crop_field()
     ortho_splitter.split_field()
+    ortho_splitter.combine_tiles()
     ortho_splitter.write_ortho()
     print("Ortho split and written to output file")
 
