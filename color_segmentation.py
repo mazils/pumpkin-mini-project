@@ -22,16 +22,22 @@ class PumpkinCounter():
         binary_Image = self._SegmentColors(image)
         if self._verbose:
             print("Finish Segmentation")
+            cv2.imwrite("binary_image.png", binary_Image.astype("uint8")*255)
 
         numBlobs, blobMap = self._FindBlobs(binary_Image)
         if self._verbose:
             print("Finish Finding Blobs")
+            print("Number of Blobs: ", numBlobs)
+            cv2.imwrite("blob_map.png", blobMap.astype("uint8")*255)    
 
         blobCounts, Blobs = self._ExtractBlobList(numBlobs, blobMap)
         if self._verbose:
             print("Finish Processing Blobs")
+            np.savetxt("blob_counts.csv", blobCounts, delimiter=",")
+            # np.savetxt("blob_map.csv", blobMap, delimiter=",")
 
         blobCounts = self._ProcessBlobCounts(blobCounts)
+        print("blobCounts: ", len(blobCounts))
         blobCount = self._ProcessBlobList(blobCounts, Blobs, mins, maxs)
         if self._verbose:
             print("Finish Counting")
@@ -123,14 +129,17 @@ class PumpkinCounter():
         return blobCounts.sum()
 
 
-def __DebugLoadTestImage():
+def __DebugLoadTestImage(filename=None):
     
-    image = input_path + "/EB-02-660_0595_0435.JPG"
-    # image_name = "EB-02-660_0595_0435"
-    # image = "Data/Images/" + image_name + ".JPG"
+    if filename is  None:
+        filename = input_path + "/EB-02-660_0595_0435.JPG"
+        # image_name = "EB-02-660_0595_0435"
+        # image = "Data/Images/" + image_name + ".JPG"
+        # image = "./Gyldensteensvej-9-19-2017-orthophoto.tif"
 
     # Load images
-    image = cv2.imread(image)
+    image = cv2.imread(filename)
+    print(image.shape)
 
     # Convert to RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype("float")
