@@ -97,7 +97,7 @@ class OrthoSplitter:
                 print(f"Tile {i}_{j} written to output file")
 
         
-    def combine_tiles(self, tiles):
+    def combine_tiles(self, tiles=None):
         """
         Combine the tiles into a single image
         """
