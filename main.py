@@ -2,6 +2,7 @@ from color_segmentation import PumpkinCounter, __DebugLoadTestImage
 from orthosplitting import output_path
 import numpy as np
 import os
+import cv2
 
 def main():
     total_pumpkins=0
@@ -16,6 +17,8 @@ def main():
             no_of_pumpkins= Pc.ProcessImage(img,mins,maxs)
             print(f"Tile {i}_{j} has {no_of_pumpkins} pumpkins")
             total_pumpkins+=no_of_pumpkins
+            annotated_image = Pc.processImageContours(img)
+            cv2.imwrite(os.path.join(output_path, f"output_tile_{i}_{j}_annotated.tif"), annotated_image)
     print(f"Total number of pumpkins in the field: {total_pumpkins}")
             
     

@@ -33,7 +33,7 @@ class PumpkinCounter():
         blobCounts, Blobs = self._ExtractBlobList(numBlobs, blobMap)
         if self._verbose:
             print("Finish Processing Blobs")
-            np.savetxt("blob_counts.csv", blobCounts, delimiter=",")
+            # np.savetxt("blob_counts.csv", blobCounts, delimiter=",")
             # np.savetxt("blob_map.csv", blobMap, delimiter=",")
 
         blobCounts = self._ProcessBlobCounts(blobCounts)
@@ -43,7 +43,19 @@ class PumpkinCounter():
             print("Finish Counting")
 
         return int(blobCount)
-
+    
+    def processImageContours(self,image:np.ndarray) -> int:
+        binary_Image = self._SegmentColors(image)
+        closed_image=self.__filterMorphological(binary_Image)
+        contours=self.__locateContours(closed_image)
+        annotated_image=self.__annotateImage(image,contours)
+        if self._verbose:
+            print("Image Annotated")
+        return annotated_image
+        
+        
+        
+        
     def _LoadReferenceImage(self):
         # image_name = "EB-02-660_0595_0435"
         # image = "Data/Images/" + image_name + ".JPG"
@@ -128,8 +140,46 @@ class PumpkinCounter():
                 blobCounts[i]=0
         return blobCounts.sum()
 
+    def __filterMorphological(self,segmented_image,kernel_size=(20,20)):
+        if segmented_image.dtype != "uint8":
+            segmented_image = segmented_image.astype("uint8")*255
+            
+        # Morphological filtering the image
+        kernel = np.ones(kernel_size, np.uint8)
+        closed_image = cv2.morphologyEx(segmented_image, cv2.MORPH_CLOSE, kernel)
+        # cv2.imwrite("./ex05-3-closed.jpg", closed_image)
+        return closed_image
+    
+    def __locateContours(self,closed_image):
+        # Locate contours.
+        contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_TREE,
+                cv2.CHAIN_APPROX_SIMPLE)
+        
+        return contours
 
-def __DebugLoadTestImage(filename=None):
+    
+    def __annotateImage(self,annotated_image,contours):
+        
+        if annotated_image.dtype != "uint8":
+            annotated_image = annotated_image.astype("uint8")*255
+        # Draw a circle above the center of each of the detected contours.
+        for contour in contours:
+            M = cv2.moments(contour)
+            if M['m00'] != 0:
+                cx = int(M['m10'] / M['m00'])
+                cy = int(M['m01'] / M['m00'])
+                cv2.circle(annotated_image, (cx, cy), 10, (0, 0, 255), 2)
+            else:
+                if self._verbose:
+                # Handle the case where m00 is zero if necessary
+                    print("Contour with zero area detected, skipping.")
+
+        # print("Number of detected balls: %d" % len(contours))
+
+        return annotated_image
+
+
+def __DebugLoadTestImage(filename=None,tiff=False):
     
     if filename is  None:
         filename = input_path + "/EB-02-660_0595_0435.JPG"
@@ -140,7 +190,13 @@ def __DebugLoadTestImage(filename=None):
     # Load images
     image = cv2.imread(filename)
     print(image.shape)
-
+    
+    if tiff:
+        temp = image.transpose(1, 2, 0)
+        t2 = cv2.split(temp)
+        img_cv = cv2.merge([t2[2], t2[1], t2[0]])
+        img_tiff = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB).astype("float")
+        return img_tiff
     # Convert to RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype("float")
     return image
@@ -151,3 +207,6 @@ if __name__=="__main__":
     mins=np.array((1000,1000))
     maxs=np.array((testImg.shape[0]-1000,testImg.shape[1]-1000))
     print(Pc.ProcessImage(testImg,mins,maxs))
+    # annotated_image = Pc.processImageContours(testImg)
+    # cv2.imwrite("annotated_image.png", cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR))
+    print("Done")

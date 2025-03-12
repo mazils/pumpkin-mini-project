@@ -32,7 +32,6 @@ class OrthoSplitter:
         self.window_location = None
         self.field = None
         self.img = None
-        self.ortho_meta = None
 
     def load_ortho(self):
         self.dataset = rasterio.open(self.ortho_file)
@@ -92,14 +91,8 @@ class OrthoSplitter:
                 # Read the tile
                 tile = field[:, window.row_off:window.row_off + window.height, window.col_off:window.col_off + window.width]
                 print(tile.shape)
-                slice_meta = self.ortho_meta.copy()
-                slice_meta.update({
-                    "height": window.height,
-                    "width": window.width,
-                    "transform": rasterio.windows.transform(window, self.ortho_meta["transform"])
-                })
                 # Write the tile to the output directory
-                with rasterio.open(os.path.join(output_path, f"output_tile_{i}_{j}.tif"), 'w', **slice_meta) as dst:
+                with rasterio.open(os.path.join(output_path, f"output_tile_{i}_{j}.tif"), 'w', **self.ortho_meta) as dst:
                     dst.write(tile)
                 print(f"Tile {i}_{j} written to output file")
 
@@ -126,7 +119,7 @@ def main():
     ortho_splitter.load_ortho()
     ortho_splitter.crop_field()
     ortho_splitter.split_field()
-    # ortho_splitter.combine_tiles()
+    ortho_splitter.combine_tiles()
     ortho_splitter.write_ortho()
     print("Ortho split and written to output file")
 
