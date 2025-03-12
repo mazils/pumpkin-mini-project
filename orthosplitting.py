@@ -32,7 +32,6 @@ class OrthoSplitter:
         self.window_location = None
         self.field = None
         self.img = None
-        self.ortho_meta = None
 
     def load_ortho(self):
         self.dataset = rasterio.open(self.ortho_file)
@@ -93,12 +92,12 @@ class OrthoSplitter:
                 tile = field[:, window.row_off:window.row_off + window.height, window.col_off:window.col_off + window.width]
                 print(tile.shape)
                 # Write the tile to the output directory
-                with rasterio.open(os.path.join(output_path, f"output_tile_{i}_{j}.tif"), 'w') as dst:
+                with rasterio.open(os.path.join(output_path, f"output_tile_{i}_{j}.tif"), 'w', **self.ortho_meta) as dst:
                     dst.write(tile)
                 print(f"Tile {i}_{j} written to output file")
 
         
-    def combine_tiles(self, tiles):
+    def combine_tiles(self, tiles=None):
         """
         Combine the tiles into a single image
         """

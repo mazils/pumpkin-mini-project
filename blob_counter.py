@@ -81,7 +81,7 @@ def main():
         if M['m00'] != 0:
             cx = int(M['m10'] / M['m00'])
             cy = int(M['m01'] / M['m00'])
-            cv2.circle(image, (cx, cy), 40, (0, 0, 255), 2)
+            cv2.circle(image, (cx, cy), 10, (0, 0, 255), 2)
         else:
             # Handle the case where m00 is zero if necessary
             print("Contour with zero area detected, skipping.")
