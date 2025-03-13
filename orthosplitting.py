@@ -64,38 +64,62 @@ class OrthoSplitter:
         return self.field
     
     
-    def split_field(self, field = None, slices = (4,4), index = (0, 0)):
+    def split_field(self, field=None, slices=(4, 4), index=(0, 0), overlap=0):
         """
-        Split the field into smaller tiles
+        Split the field into smaller tiles with optional overlap.
+        Overlap should be specified as a percentage between 0 and 100.
         """
-        if field is None:   
+        if not (0 <= overlap <= 100):
+            raise ValueError("Overlap must be between 0 and 100")
+
+        overlap /= 100  # Convert percentage to a fraction
+
+        if field is None:
             field = self.field
+
         # Current Shape of the field
-        bands, rows, cols = field.shape 
-        
-        self.slices = slices
+        bands, rows, cols = field.shape
+
         slice_r, slice_c = slices
+        self.slices = slices
         
         # Calculate the number of rows and columns for each tile
         row_slices = rows // slice_r
         col_slices = cols // slice_c
-        if self.verbose:
-            print(row_slices, col_slices)
-        
+
+        overlap_r = int(row_slices * overlap)
+        overlap_c = int(col_slices * overlap)
+
         self.index = index
         row, col = index
-        if row == slice_r and col == slice_c:
-            row = row -1
-            col = col -1
-        window = Window.from_slices((row * row_slices, (row + 1) * row_slices), (col * col_slices, (col + 1) * col_slices))
+
+        if row >= slice_r or col >= slice_c:
+            print("Invalid index")
+            return None
+        
+        if self.verbose:
+            print(f"Row slices: {row_slices}, Column slices: {col_slices}")
+            print(f"Overlap rows: {overlap_r}, Overlap columns: {overlap_c}")
+
+
+        # Create a window for the tile
+        window = Window(
+            row * row_slices - min(row * overlap_r, row_slices),
+            col * col_slices - min(col * overlap_c, col_slices),
+            row_slices + overlap_r,
+            col_slices + overlap_c
+        )
+
         if self.verbose:
             print(f"Window Created: {window}")
             print(f"Window shape: {window.height, window.width}")
+
         # Read the tile
         tile = field[:, window.row_off:window.row_off + window.height, window.col_off:window.col_off + window.width]
-        
-        if self.verbose: 
+
+        if self.verbose:
             print(tile.shape)
+
         return tile
 
     def write_tile(self, tile=None, all_tiles=False):
@@ -153,7 +177,7 @@ class OrthoSplitter:
         
         return img_cv
 
-    def orthosplit_to_image(self, index=(0, 0)):
+    def orthosplit_to_image(self, index=(0, 0), overlap=0):
         """
         Convert the orthophoto so slices
         and return a tile as an image
@@ -162,15 +186,15 @@ class OrthoSplitter:
         if self.verbose: print("Ortho loaded")
         self.crop_field()
         if self.verbose: print("Field cropped")
-        tile = self.split_field(index=index)
-        if self.verbose: print(f"Tile created: {tile.shape} at index {index}")
+        tile = self.split_field(index=index, overlap=overlap)   
+        if self.verbose: print(f"Tile created: {tile.shape} at index {index} with overlap {overlap}%")   
         img = self.tile_to_image(tile=tile)
         if self.verbose: print("Tile converted to image")   
         return img
 
 def main():
     ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=True)
-    img = ortho_splitter.orthosplit_to_image()
+    img = ortho_splitter.orthosplit_to_image(overlap=20, index=(1, 0))
     cv.imwrite("tile_image.png", img)
     # ortho_splitter.write_tile(all_tiles=True) 
     # ortho_splitter.combine_tiles()
