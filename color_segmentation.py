@@ -1,15 +1,6 @@
 import cv2
 import numpy as np
-import os
-
-script_dir = os.path.dirname(__file__)
-input_rel = "../figures"
-annotated_rel = "../annotated-images"  
-output_rel = "../processed-images"
-input_path = os.path.join(script_dir, input_rel)
-output_path = os.path.join(script_dir, output_rel)
-annotated_path = os.path.join(script_dir, annotated_rel)
-
+from file_path import input_path, annotated_path, output_path
 class PumpkinCounter():
     def __init__(self,verbose=False):
         image,image_anotated=self._LoadReferenceImage()
@@ -22,19 +13,18 @@ class PumpkinCounter():
         binary_Image = self._SegmentColors(image)
         if self._verbose:
             print("Finish Segmentation")
-            cv2.imwrite("binary_image.png", binary_Image.astype("uint8")*255)
+            cv2.imwrite(output_path + "/binary_image.png", binary_Image.astype("uint8")*255)
 
         numBlobs, blobMap = self._FindBlobs(binary_Image)
         if self._verbose:
             print("Finish Finding Blobs")
             print("Number of Blobs: ", numBlobs)
-            cv2.imwrite("blob_map.png", blobMap.astype("uint8")*255)    
+            cv2.imwrite(output_path + "/blob_map.png", blobMap.astype("uint8")*255)    
 
         blobCounts, Blobs = self._ExtractBlobList(numBlobs, blobMap)
         if self._verbose:
             print("Finish Processing Blobs")
-            # np.savetxt("blob_counts.csv", blobCounts, delimiter=",")
-            # np.savetxt("blob_map.csv", blobMap, delimiter=",")
+
 
         blobCounts = self._ProcessBlobCounts(blobCounts)
         print("blobCounts: ", len(blobCounts))
@@ -49,20 +39,20 @@ class PumpkinCounter():
         closed_image=self.__filterMorphological(binary_Image)
         contours=self.__locateContours(closed_image)
         annotated_image=self.__annotateImage(image,contours)
+        # annotated_image=cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
         if self._verbose:
             print("Image Annotated")
-        return annotated_image
+        return annotated_image, len(contours)
         
         
         
         
     def _LoadReferenceImage(self):
-        # image_name = "EB-02-660_0595_0435"
-        # image = "Data/Images/" + image_name + ".JPG"
-        # image_annoted = "Data/Images_annotated/" + image_name + ".png"
 
-        image = input_path + "/EB-02-660_0595_0435.JPG"
-        image_annoted = annotated_path + "/EB-02-660_0595_0435.png"  
+        # image = input_path + "/EB-02-660_0595_0435.JPG"
+        image = annotated_path + "/EB-02-660_0594_0344.JPG"
+        # image_annoted = annotated_path + "/EB-02-660_0595_0435.png"  
+        image_annoted = annotated_path + "/EB-02-660_0594_0344.png"
         # Load images
         image = cv2.imread(image)
         image_annoted = cv2.imread(image_annoted)
@@ -140,14 +130,15 @@ class PumpkinCounter():
                 blobCounts[i]=0
         return blobCounts.sum()
 
-    def __filterMorphological(self,segmented_image,kernel_size=(20,20)):
+    def __filterMorphological(self,segmented_image,kernel_size=(3,3)):
         if segmented_image.dtype != "uint8":
             segmented_image = segmented_image.astype("uint8")*255
             
         # Morphological filtering the image
         kernel = np.ones(kernel_size, np.uint8)
         closed_image = cv2.morphologyEx(segmented_image, cv2.MORPH_CLOSE, kernel)
-        # cv2.imwrite("./ex05-3-closed.jpg", closed_image)
+        if self._verbose: 
+            cv2.imwrite(output_path + "./ex05-3-closed.jpg", closed_image)
         return closed_image
     
     def __locateContours(self,closed_image):
@@ -161,14 +152,17 @@ class PumpkinCounter():
     def __annotateImage(self,annotated_image,contours):
         
         if annotated_image.dtype != "uint8":
-            annotated_image = annotated_image.astype("uint8")*255
+            annotated_image = annotated_image.astype("uint8")
+    
+        annotated_image = cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
+
         # Draw a circle above the center of each of the detected contours.
         for contour in contours:
             M = cv2.moments(contour)
             if M['m00'] != 0:
                 cx = int(M['m10'] / M['m00'])
                 cy = int(M['m01'] / M['m00'])
-                cv2.circle(annotated_image, (cx, cy), 10, (0, 0, 255), 2)
+                cv2.circle(annotated_image, (cx, cy), 3, (0, 0, 255), 2)
             else:
                 if self._verbose:
                 # Handle the case where m00 is zero if necessary
@@ -183,20 +177,11 @@ def __DebugLoadTestImage(filename=None,tiff=False):
     
     if filename is  None:
         filename = input_path + "/EB-02-660_0595_0435.JPG"
-        # image_name = "EB-02-660_0595_0435"
-        # image = "Data/Images/" + image_name + ".JPG"
-        # image = "./Gyldensteensvej-9-19-2017-orthophoto.tif"
 
     # Load images
     image = cv2.imread(filename)
     print(image.shape)
-    
-    if tiff:
-        temp = image.transpose(1, 2, 0)
-        t2 = cv2.split(temp)
-        img_cv = cv2.merge([t2[2], t2[1], t2[0]])
-        img_tiff = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB).astype("float")
-        return img_tiff
+
     # Convert to RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype("float")
     return image
