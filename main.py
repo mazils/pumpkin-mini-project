@@ -18,8 +18,8 @@ def main():
             img =  cv2.cvtColor(tile, cv2.COLOR_BGR2RGB).astype("float")
             # Apply blur 
             # img = cv2.GaussianBlur(img, (3, 3), 0)
-            mins=np.array((10,10))
-            maxs=np.array((img.shape[0]-10,img.shape[1]-10))
+            mins=np.array((0,0))
+            maxs=np.array((img.shape[0]-0,img.shape[1]-0))
             
             no_of_pumpkins= Pc.ProcessImage(img,mins,maxs)
             total_pumpkins+=no_of_pumpkins
