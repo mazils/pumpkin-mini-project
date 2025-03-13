@@ -1,21 +1,10 @@
 import os
 import cv2 as cv
-import numpy as np
 import rasterio
 from rasterio.windows import Window
 from rasterio.plot import show
+from file_path import ortho_path, output_path
 
-
-script_dir = os.path.dirname(__file__)
-
-input_rel = "../figures"
-ortho_rel = "../visualized-qgis-images"
-output_rel = "../processed-images"
-
-
-input_path = os.path.join(script_dir, input_rel)
-output_path = os.path.join(script_dir, output_rel)  
-ortho_path = os.path.join(script_dir, ortho_rel)
 
 ortho_file = ortho_path + "/Gyldensteensvej-9-19-2017-orthophoto.tif"
 output_file = output_path + "/field.tif"
@@ -95,7 +84,7 @@ class OrthoSplitter:
         
         self.index = index
         row, col = index
-        if index == slices:
+        if row == slice_r and col == slice_c:
             row = row -1
             col = col -1
         window = Window.from_slices((row * row_slices, (row + 1) * row_slices), (col * col_slices, (col + 1) * col_slices))
@@ -162,13 +151,13 @@ class OrthoSplitter:
         
         return img_cv
 
-    def orthosplit_to_image(self, ortho=ortho_file, index=(0, 0)):
+    def orthosplit_to_image(self, index=(0, 0)):
         """
         Convert the orthophoto so slices
         and return a tile as an image
         """
         self.load_ortho()
-        if self.verbose: int("Ortho loaded")
+        if self.verbose: print("Ortho loaded")
         self.crop_field()
         if self.verbose: print("Field cropped")
         tile = self.split_field(index=index)
@@ -179,13 +168,10 @@ class OrthoSplitter:
 
 def main():
     ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=True)
-    ortho_splitter.load_ortho()
-    ortho_splitter.crop_field()
-    tile = ortho_splitter.split_field(index=(4, 4))
-    img = ortho_splitter.tile_to_image(tile=tile)
+    img = ortho_splitter.orthosplit_to_image()
+    cv.imwrite("tile_image.png", img)
     # ortho_splitter.write_tile(all_tiles=True) 
     # ortho_splitter.combine_tiles()
-    # ortho_splitter.write_ortho()
 
 
 if __name__ == "__main__":

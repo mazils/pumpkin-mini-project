@@ -1,15 +1,6 @@
 import cv2
 import numpy as np
-import os
-
-script_dir = os.path.dirname(__file__)
-input_rel = "../figures"
-annotated_rel = "../annotated-images"  
-output_rel = "../processed-images"
-input_path = os.path.join(script_dir, input_rel)
-output_path = os.path.join(script_dir, output_rel)
-annotated_path = os.path.join(script_dir, annotated_rel)
-
+from file_path import input_path, annotated_path, output_path
 class PumpkinCounter():
     def __init__(self,verbose=False):
         image,image_anotated=self._LoadReferenceImage()
