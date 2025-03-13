@@ -144,15 +144,46 @@ class OrthoSplitter:
                 dst.write(img)
             print("Ortho written to output file")
 
+    def tile_to_image(self, tile=None):
+        """
+        Convert the tile to an image
+        """
 
+        if tile is None:
+            tile = self.field
+        
+        temp = tile.transpose(1, 2, 0)
+        t2 = cv.split(temp)
+        img_cv = cv.merge([t2[2], t2[1], t2[0]])
+        
+        if self.verbose:
+            print(f"Tile Shape: {tile.shape}")
+            print(f"Image Shape: {img_cv.shape}")
+        
+        return img_cv
 
+    def orthosplit_to_image(self, ortho=ortho_file, index=(0, 0)):
+        """
+        Convert the orthophoto so slices
+        and return a tile as an image
+        """
+        self.load_ortho()
+        if self.verbose: int("Ortho loaded")
+        self.crop_field()
+        if self.verbose: print("Field cropped")
+        tile = self.split_field(index=index)
+        if self.verbose: print(f"Tile created: {tile.shape} at index {index}")
+        img = self.tile_to_image(tile=tile)
+        if self.verbose: print("Tile converted to image")   
+        return img
 
 def main():
-    ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=False)
+    ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=True)
     ortho_splitter.load_ortho()
     ortho_splitter.crop_field()
-    # tile = ortho_splitter.split_field(index=(4, 4))
-    ortho_splitter.write_tile(all_tiles=True) 
+    tile = ortho_splitter.split_field(index=(4, 4))
+    img = ortho_splitter.tile_to_image(tile=tile)
+    # ortho_splitter.write_tile(all_tiles=True) 
     # ortho_splitter.combine_tiles()
     # ortho_splitter.write_ortho()
 
