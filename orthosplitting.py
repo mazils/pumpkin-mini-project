@@ -22,6 +22,7 @@ class OrthoSplitter:
         self.field = None
         self.img = None
         self.slices = slices
+        self.slice_meta = None  
         self.index = (0,0)
         self.verbose = verbose
 
@@ -97,28 +98,34 @@ class OrthoSplitter:
             print("Invalid index")
             return None
         
-        if self.verbose:
-            print(f"Row slices: {row_slices}, Column slices: {col_slices}")
-            print(f"Overlap rows: {overlap_r}, Overlap columns: {overlap_c}")
 
-
+        
+        top_row = row * row_slices
+        bottom_row = (row + 1) * row_slices
+        left_col = col * col_slices
+        right_col = (col + 1) * col_slices
+                
         # Create a window for the tile
-        window = Window(
-            row * row_slices - min(row * overlap_r, row_slices),
-            col * col_slices - min(col * overlap_c, col_slices),
-            row_slices + overlap_r,
-            col_slices + overlap_c
-        )
+        window = Window.from_slices((top_row, bottom_row), (left_col, right_col))
+        # Read the tile
+        tile = field[:, window.row_off  :window.row_off + window.height + overlap_r, 
+                     window.col_off :window.col_off + window.width + overlap_c]   
+
+        slice_meta = self.ortho_meta.copy()
+        self.slice_meta = slice_meta.copy()
+        slice_meta.update({
+            "height": window.height,
+            "width": window.width,
+            "transform": rasterio.windows.transform(window, self.ortho_meta["transform"])
+        })
+        self.slice_meta = slice_meta.copy()
 
         if self.verbose:
             print(f"Window Created: {window}")
-            print(f"Window shape: {window.height, window.width}")
-
-        # Read the tile
-        tile = field[:, window.row_off:window.row_off + window.height, window.col_off:window.col_off + window.width]
-
-        if self.verbose:
-            print(tile.shape)
+            print(f"Row slices: {row_slices}, Column slices: {col_slices}")
+            print(f"Overlap rows: {overlap_r}, Overlap columns: {overlap_c}")
+            # print(f"Window shape: {window.height, window.width}")
+            # print(f"Window offset: {window.row_off, window.col_off}")
 
         return tile
 
@@ -134,11 +141,11 @@ class OrthoSplitter:
             for i in range(row):
                 for j in range(col):
                     tile = self.split_field(index=(i, j))
-                    with rasterio.open(os.path.join(output_path, f"output_tile_{i}_{j}.tif"), 'w', **self.ortho_meta) as dst:
+                    with rasterio.open(os.path.join(output_path, f"output_tile_{i}_{j}.tif"), 'w', **self.slice_meta) as dst:
                         dst.write(tile)
                     print(f"Tile {i}_{j} written to output file")
         else:
-            with rasterio.open(os.path.join(output_path, f"output_tile_{row}_{col}.tif"), 'w', **self.ortho_meta) as dst:
+            with rasterio.open(os.path.join(output_path, f"output_tile_{row}_{col}.tif"), 'w', **self.slice_meta) as dst:
                 dst.write(tile)
             print(f"Tile written to output file")
             
@@ -194,9 +201,9 @@ class OrthoSplitter:
 
 def main():
     ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=True)
-    img = ortho_splitter.orthosplit_to_image(overlap=20, index=(1, 0))
+    img = ortho_splitter.orthosplit_to_image(overlap=20, index=(0, 0))
     cv.imwrite("tile_image.png", img)
-    # ortho_splitter.write_tile(all_tiles=True) 
+    ortho_splitter.write_tile(all_tiles=True) 
     # ortho_splitter.combine_tiles()
 
 
