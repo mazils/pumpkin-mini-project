@@ -17,3 +17,7 @@ annotated_path = os.path.join(script_dir, annotated_rel)
 
 ortho_file = ortho_path + "/Gyldensteensvej-9-19-2017-orthophoto.tif"
 output_file = output_path + "/field.tif"
+
+    # image_name = "EB-02-660_0595_0435"
+    # image = "Data/Images/" + image_name + ".JPG"
+    # image = "./Gyldensteensvej-9-19-2017-orthophoto.tif"
