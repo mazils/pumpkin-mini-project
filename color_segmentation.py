@@ -49,8 +49,10 @@ class PumpkinCounter():
         
     def _LoadReferenceImage(self):
 
-        image = input_path + "/EB-02-660_0595_0435.JPG"
-        image_annoted = annotated_path + "/EB-02-660_0595_0435.png"  
+        # image = input_path + "/EB-02-660_0595_0435.JPG"
+        image = annotated_path + "/EB-02-660_0594_0344.JPG"
+        # image_annoted = annotated_path + "/EB-02-660_0595_0435.png"  
+        image_annoted = annotated_path + "/EB-02-660_0594_0344.png"
         # Load images
         image = cv2.imread(image)
         image_annoted = cv2.imread(image_annoted)
@@ -128,14 +130,14 @@ class PumpkinCounter():
                 blobCounts[i]=0
         return blobCounts.sum()
 
-    def __filterMorphological(self,segmented_image,kernel_size=(20,20)):
+    def __filterMorphological(self,segmented_image,kernel_size=(3,3)):
         if segmented_image.dtype != "uint8":
             segmented_image = segmented_image.astype("uint8")*255
             
         # Morphological filtering the image
         kernel = np.ones(kernel_size, np.uint8)
         closed_image = cv2.morphologyEx(segmented_image, cv2.MORPH_CLOSE, kernel)
-        # cv2.imwrite("./ex05-3-closed.jpg", closed_image)
+        cv2.imwrite("./ex05-3-closed.jpg", closed_image)
         return closed_image
     
     def __locateContours(self,closed_image):
@@ -159,7 +161,7 @@ class PumpkinCounter():
             if M['m00'] != 0:
                 cx = int(M['m10'] / M['m00'])
                 cy = int(M['m01'] / M['m00'])
-                cv2.circle(annotated_image, (cx, cy), 10, (0, 0, 255), 2)
+                cv2.circle(annotated_image, (cx, cy), 3, (0, 0, 255), 2)
             else:
                 if self._verbose:
                 # Handle the case where m00 is zero if necessary
