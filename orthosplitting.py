@@ -135,7 +135,10 @@ class OrthoSplitter:
             # print(f"Window shape: {window.height, window.width}")
             # print(f"Window offset: {window.row_off, window.col_off}")
 
-        return tile
+        min_overlap = (overlap_r_top, overlap_c_left)
+        max_overlap = (overlap_r_bottom, overlap_c_right)
+        
+        return tile, min_overlap, max_overlap
 
     def write_tile(self, tile=None, all_tiles=False, output_path=output_path, overlap=0):
         """
@@ -149,7 +152,7 @@ class OrthoSplitter:
             row, col = self.slices
             for i in range(row):
                 for j in range(col):
-                    tile = self.split_field(index=(i, j),overlap=overlap)
+                    tile, min, max  = self.split_field(index=(i, j),overlap=overlap)
                     with rasterio.open(os.path.join(output_path, f"output_tile_{i}_{j}.tif"), 'w', **self.slice_meta) as dst:
                         dst.write(tile)
                     print(f"Tile {i}_{j} written to output file")
@@ -202,11 +205,11 @@ class OrthoSplitter:
         if self.verbose: print("Ortho loaded")
         self.crop_field()
         if self.verbose: print("Field cropped")
-        tile = self.split_field(index=index, overlap=overlap)   
+        tile, min, max = self.split_field(index=index, overlap=overlap)   
         if self.verbose: print(f"Tile created: {tile.shape} at index {index} with overlap {overlap}%")   
         img = self.tile_to_image(tile=tile)
         if self.verbose: print("Tile converted to image")   
-        return img
+        return img, min, max
 
 def main():
     ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=True)

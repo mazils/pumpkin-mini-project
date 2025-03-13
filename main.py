@@ -14,12 +14,14 @@ def main():
 
     for i in range(4):
         for j in range(4):
-            tile= ortho_splitter.orthosplit_to_image(index=(i, j))
+            tile, mins , maxs = ortho_splitter.orthosplit_to_image(index=(i, j))
             img =  cv2.cvtColor(tile, cv2.COLOR_BGR2RGB).astype("float")
+
             # Apply blur 
             # img = cv2.GaussianBlur(img, (3, 3), 0)
-            mins=np.array((0,0))
-            maxs=np.array((img.shape[0]-0,img.shape[1]-0))
+            
+            mins=np.array((mins[0],mins[1]))
+            maxs=np.array((img.shape[0]-maxs[0],img.shape[1]-maxs[1]))
             
             no_of_pumpkins= Pc.ProcessImage(img,mins,maxs)
             total_pumpkins+=no_of_pumpkins
