@@ -13,13 +13,13 @@ class PumpkinCounter():
         binary_Image = self._SegmentColors(image)
         if self._verbose:
             print("Finish Segmentation")
-            cv2.imwrite(output_path + "binary_image.png", binary_Image.astype("uint8")*255)
+            cv2.imwrite(output_path + "/binary_image.png", binary_Image.astype("uint8")*255)
 
         numBlobs, blobMap = self._FindBlobs(binary_Image)
         if self._verbose:
             print("Finish Finding Blobs")
             print("Number of Blobs: ", numBlobs)
-            cv2.imwrite(output_path + "blob_map.png", blobMap.astype("uint8")*255)    
+            cv2.imwrite(output_path + "/blob_map.png", blobMap.astype("uint8")*255)    
 
         blobCounts, Blobs = self._ExtractBlobList(numBlobs, blobMap)
         if self._verbose:
@@ -137,7 +137,8 @@ class PumpkinCounter():
         # Morphological filtering the image
         kernel = np.ones(kernel_size, np.uint8)
         closed_image = cv2.morphologyEx(segmented_image, cv2.MORPH_CLOSE, kernel)
-        if self._verbose: cv2.imwrite(output_path + "./ex05-3-closed.jpg", closed_image)
+        if self._verbose: 
+            cv2.imwrite(output_path + "./ex05-3-closed.jpg", closed_image)
         return closed_image
     
     def __locateContours(self,closed_image):
