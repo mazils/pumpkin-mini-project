@@ -144,7 +144,9 @@ class OrthoSplitter:
         temp = tile.transpose(1, 2, 0)
         t2 = cv.split(temp)
         img_cv = cv.merge([t2[2], t2[1], t2[0]])
-        
+    
+        # img_tiff = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB).astype("float")
+
         if self.verbose:
             print(f"Tile Shape: {tile.shape}")
             print(f"Image Shape: {img_cv.shape}")

@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from file_path import input_path, annotated_path, output_path
+from file_path import input_path, annotated_path
 class PumpkinCounter():
     def __init__(self,verbose=False):
         image,image_anotated=self._LoadReferenceImage()
@@ -24,8 +24,7 @@ class PumpkinCounter():
         blobCounts, Blobs = self._ExtractBlobList(numBlobs, blobMap)
         if self._verbose:
             print("Finish Processing Blobs")
-            # np.savetxt("blob_counts.csv", blobCounts, delimiter=",")
-            # np.savetxt("blob_map.csv", blobMap, delimiter=",")
+
 
         blobCounts = self._ProcessBlobCounts(blobCounts)
         print("blobCounts: ", len(blobCounts))
@@ -49,9 +48,6 @@ class PumpkinCounter():
         
         
     def _LoadReferenceImage(self):
-        # image_name = "EB-02-660_0595_0435"
-        # image = "Data/Images/" + image_name + ".JPG"
-        # image_annoted = "Data/Images_annotated/" + image_name + ".png"
 
         image = input_path + "/EB-02-660_0595_0435.JPG"
         image_annoted = annotated_path + "/EB-02-660_0595_0435.png"  
@@ -178,20 +174,11 @@ def __DebugLoadTestImage(filename=None,tiff=False):
     
     if filename is  None:
         filename = input_path + "/EB-02-660_0595_0435.JPG"
-        # image_name = "EB-02-660_0595_0435"
-        # image = "Data/Images/" + image_name + ".JPG"
-        # image = "./Gyldensteensvej-9-19-2017-orthophoto.tif"
 
     # Load images
     image = cv2.imread(filename)
     print(image.shape)
-    
-    if tiff:
-        temp = image.transpose(1, 2, 0)
-        t2 = cv2.split(temp)
-        img_cv = cv2.merge([t2[2], t2[1], t2[0]])
-        img_tiff = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB).astype("float")
-        return img_tiff
+
     # Convert to RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype("float")
     return image
