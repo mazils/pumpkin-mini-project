@@ -49,9 +49,10 @@ class PumpkinCounter():
         closed_image=self.__filterMorphological(binary_Image)
         contours=self.__locateContours(closed_image)
         annotated_image=self.__annotateImage(image,contours)
+        # annotated_image=cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
         if self._verbose:
             print("Image Annotated")
-        return annotated_image
+        return annotated_image, len(contours)
         
         
         
@@ -161,7 +162,10 @@ class PumpkinCounter():
     def __annotateImage(self,annotated_image,contours):
         
         if annotated_image.dtype != "uint8":
-            annotated_image = annotated_image.astype("uint8")*255
+            annotated_image = annotated_image.astype("uint8")
+    
+        annotated_image = cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
+
         # Draw a circle above the center of each of the detected contours.
         for contour in contours:
             M = cv2.moments(contour)

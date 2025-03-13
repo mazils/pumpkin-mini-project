@@ -26,23 +26,20 @@ def main():
     # filename =  input_path + "/EB-02-660_0595_0435.JPG"
     # img = cv2.imread(filename)
     
-
-
-
     # Convert to HSV
-    image = input_path + "/EB-02-660_0595_0435.JPG"
-    image_annoted = annotated_path + "/EB-02-660_0595_0435.png"  
+    image_path = input_path + "/EB-02-660_0595_0435.JPG"
+    image_annoted_path = annotated_path + "/EB-02-660_0595_0435.png"  
     # Load images
-    image = cv2.imread(image)
+    image = cv2.imread(image_path)
     dst = cv2.GaussianBlur(image, (5, 5), 0)
     cv2.imwrite("./ex05-1-smoothed.jpg", dst)
-    image_annoted = cv2.imread(image_annoted)
+    image_annoted = cv2.imread(image_annoted_path)
 
     # Convert to RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype("float")
     image_annoted = cv2.cvtColor(image_annoted, cv2.COLOR_BGR2RGB).astype("float")
     
-        # Find annotated color
+    # Find annotated color
     tmp0 = image_annoted[:, :, 0] == 255
     tmp1 = image_annoted[:, :, 1] == 0
     tmp2 = image_annoted[:, :, 2] == 0
@@ -50,8 +47,8 @@ def main():
 
     # determine color statistics
     pumkin_colors = image[annotated_pixels]
-    refColorMean= pumkin_colors.mean(axis=0)
-    refColorCov= np.cov(pumkin_colors.T)
+    refColorMean = pumkin_colors.mean(axis=0)
+    refColorCov = np.cov(pumkin_colors.T)
 
     # Hendriks math magic for mahalanobis distance
     diff = image - refColorMean
@@ -74,22 +71,23 @@ def main():
     contours, hierarchy = cv2.findContours(closed_image, cv2.RETR_TREE,
             cv2.CHAIN_APPROX_SIMPLE)
 
-    image = image.astype("uint8")*255
+    image = image.astype("uint8")
+    # Convert back to BGR before saving
+    image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     # Draw a circle above the center of each of the detected contours.
     for contour in contours:
         M = cv2.moments(contour)
         if M['m00'] != 0:
             cx = int(M['m10'] / M['m00'])
             cy = int(M['m01'] / M['m00'])
-            cv2.circle(image, (cx, cy), 10, (0, 0, 255), 2)
+            cv2.circle(image_bgr, (cx, cy), 10, (0, 0, 255), 2)
         else:
             # Handle the case where m00 is zero if necessary
             print("Contour with zero area detected, skipping.")
 
     print("Number of detected balls: %d" % len(contours))
 
-    cv2.imwrite("./ex05-4-located-objects.jpg", image)
-
+    cv2.imwrite("./ex05-4-located-objects.jpg", image_bgr)
 
 
 main()
