@@ -38,6 +38,9 @@ class PumpkinCounter():
         binary_Image = self._SegmentColors(image)
         closed_image=self.__filterMorphological(binary_Image)
         contours=self.__locateContours(closed_image)
+        cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
+        if self._verbose:
+            cv2.imwrite(output_path + "/contours_image.png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
         annotated_image=self.__annotateImage(image,contours)
         # annotated_image=cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
         if self._verbose:
@@ -192,6 +195,8 @@ if __name__=="__main__":
     mins=np.array((1000,1000))
     maxs=np.array((testImg.shape[0]-1000,testImg.shape[1]-1000))
     print(Pc.ProcessImage(testImg,mins,maxs))
+    # img, blob_count = Pc.processImageContours(testImg)
+
     # annotated_image = Pc.processImageContours(testImg)
     # cv2.imwrite("annotated_image.png", cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR))
     print("Done")
