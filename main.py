@@ -10,7 +10,7 @@ def main():
     total_pumpkins=0
     blob_count = 0
     ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=False)
-    Pc=PumpkinCounter(verbose=True)
+    Pc=PumpkinCounter(verbose=False)
 
     for i in range(4):
         for j in range(4):
@@ -37,7 +37,13 @@ def main():
     print(f"Total number of pumpkins in the field: {total_pumpkins}")
     print(f"Total number of pumpkins in the field: {blob_count}")
     
-
+    whole_field = ortho_splitter.crop_field()
+    field = ortho_splitter.tile_to_image(whole_field)
+    field_img = cv2.cvtColor(field, cv2.COLOR_BGR2RGB).astype("float")
+    annotated_image, blob_count_pumpkin = Pc.processImageContours(field_img)
+    cv2.imwrite(os.path.join(annotated_path, "field_annotated.tif"), annotated_image)
+    print(f"Blob Count: Field has {blob_count_pumpkin} pumpkins")
+    print("Done")
 
 if __name__=="__main__":\
     main()
