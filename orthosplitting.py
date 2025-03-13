@@ -106,10 +106,18 @@ class OrthoSplitter:
         right_col = (col + 1) * col_slices
                 
         # Create a window for the tile
-        window = Window.from_slices((top_row, bottom_row), (left_col, right_col))
+        overlap_r_top = 0 if row == 0 else -overlap_r
+        overlap_r_bottom = 0 if row == slice_r - 1 else overlap_r
+        overlap_c_left = 0 if col == 0 else -overlap_c
+        overlap_c_right = 0 if col == slice_c - 1 else overlap_c
+
+        window = Window.from_slices((top_row + overlap_r_top,
+                                     bottom_row + overlap_r_bottom), 
+                                    (left_col + overlap_c_left,
+                                     right_col + overlap_c_right))
+        
         # Read the tile
-        tile = field[:, window.row_off  :window.row_off + window.height + overlap_r, 
-                     window.col_off :window.col_off + window.width + overlap_c]   
+        tile = field[:, window.row_off:window.row_off + window.height ,window.col_off  :window.col_off + window.width]   
 
         slice_meta = self.ortho_meta.copy()
         self.slice_meta = slice_meta.copy()
@@ -129,18 +137,19 @@ class OrthoSplitter:
 
         return tile
 
-    def write_tile(self, tile=None, all_tiles=False):
+    def write_tile(self, tile=None, all_tiles=False, output_path=output_path, overlap=0):
         """
         Write the tile to the output directory
         """
         row, col = self.index
         if tile is None:
             tile = self.field
+            print(f"Tile not specified. Using the cropped field")
         if all_tiles:
             row, col = self.slices
             for i in range(row):
                 for j in range(col):
-                    tile = self.split_field(index=(i, j))
+                    tile = self.split_field(index=(i, j),overlap=overlap)
                     with rasterio.open(os.path.join(output_path, f"output_tile_{i}_{j}.tif"), 'w', **self.slice_meta) as dst:
                         dst.write(tile)
                     print(f"Tile {i}_{j} written to output file")
@@ -201,9 +210,9 @@ class OrthoSplitter:
 
 def main():
     ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=True)
-    img = ortho_splitter.orthosplit_to_image(overlap=20, index=(0, 0))
+    img = ortho_splitter.orthosplit_to_image(overlap=5, index=(1, 1))
     cv.imwrite("tile_image.png", img)
-    ortho_splitter.write_tile(all_tiles=True) 
+    ortho_splitter.write_tile(all_tiles=False, overlap=2.5) 
     # ortho_splitter.combine_tiles()
 
 
