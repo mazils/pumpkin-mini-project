@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from file_path import input_path, annotated_path, output_path
+import matplotlib.pyplot as plt
 class PumpkinCounter():
     def __init__(self,verbose=False):
         image,image_anotated=self._LoadReferenceImage()
@@ -24,6 +25,7 @@ class PumpkinCounter():
         blobCounts, Blobs = self._ExtractBlobList(numBlobs, blobMap)
         if self._verbose:
             print("Finish Processing Blobs")
+        blobCounts=np.sort(blobCounts)
 
 
         blobCounts = self._ProcessBlobCounts(blobCounts)
@@ -38,9 +40,9 @@ class PumpkinCounter():
         binary_Image = self._SegmentColors(image)
         closed_image=self.__filterMorphological(binary_Image)
         contours=self.__locateContours(closed_image)
-        cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
-        if self._verbose:
-            cv2.imwrite(output_path + "/contours_image.png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        # cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
+        # if self._verbose:
+        #     cv2.imwrite(output_path + "/contours_image.png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
         annotated_image=self.__annotateImage(image,contours)
         # annotated_image=cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
         if self._verbose:
@@ -117,9 +119,9 @@ class PumpkinCounter():
     
     def _ProcessBlobCounts(self,blobCounts):
         # filter out small blobs
-        blobCounts[blobCounts < 20] = 0
-        blobCounts[np.logical_and(blobCounts > 0, blobCounts < 100)] = 1
-        blobCounts[blobCounts > 100] = (blobCounts[blobCounts > 100] / 100).astype(np.int16)
+        blobCounts[blobCounts < 12] = 0
+        blobCounts[np.logical_and(blobCounts > 0, blobCounts < 27)] = 1
+        blobCounts[blobCounts > 27] = (blobCounts[blobCounts > 27] / 27).astype(np.int16)
         return blobCounts
     
     def _ProcessBlobList(self,blobCounts,blobs,mins,maxs):
@@ -168,8 +170,8 @@ class PumpkinCounter():
                 cv2.circle(annotated_image, (cx, cy), 3, (0, 0, 255), 2)
             else:
                 if self._verbose:
-                # Handle the case where m00 is zero if necessary
                     print("Contour with zero area detected, skipping.")
+                # Handle the case where m00 is zero if necessary
 
         # print("Number of detected balls: %d" % len(contours))
 
@@ -192,10 +194,11 @@ def __DebugLoadTestImage(filename=None,tiff=False):
 if __name__=="__main__":
     Pc=PumpkinCounter(verbose=True)
     testImg=__DebugLoadTestImage()
-    mins=np.array((1000,1000))
-    maxs=np.array((testImg.shape[0]-1000,testImg.shape[1]-1000))
+    mins=np.array((0,0))
+    maxs=np.array((testImg.shape[0]-0,testImg.shape[1]-0))
     print(Pc.ProcessImage(testImg,mins,maxs))
-    # img, blob_count = Pc.processImageContours(testImg)
+    img, blob_count = Pc.processImageContours(testImg)
+    print(blob_count)
 
     # annotated_image = Pc.processImageContours(testImg)
     # cv2.imwrite("annotated_image.png", cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR))
