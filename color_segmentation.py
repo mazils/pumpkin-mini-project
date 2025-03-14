@@ -4,6 +4,7 @@ from file_path import input_path, annotated_path, output_path
 import matplotlib.pyplot as plt
 class PumpkinCounter():
     def __init__(self,verbose=False):
+        self.countour_decrease=0
         image,image_anotated=self._LoadReferenceImage()
         self._FindReferenceColorStats(image,image_anotated)
         self._verbose=verbose
@@ -36,18 +37,21 @@ class PumpkinCounter():
 
         return int(blobCount)
     
-    def processImageContours(self,image:np.ndarray) -> int:
+    def processImageContours(self,image:np.ndarray, mins: np.ndarray, maxs: np.ndarray) -> int:
         binary_Image = self._SegmentColors(image)
         closed_image=self.__filterMorphological(binary_Image)
         contours=self.__locateContours(closed_image)
         # cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
         # if self._verbose:
         #     cv2.imwrite(output_path + "/contours_image.png", cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-        annotated_image=self.__annotateImage(image,contours)
+        annotated_image=self.__annotateImage(image,contours,mins,maxs)  
         # annotated_image=cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
         if self._verbose:
             print("Image Annotated")
-        return annotated_image, len(contours)
+            
+        countvalue = len(contours) - self.countour_decrease
+        self.countour_decrease = 0
+        return annotated_image, countvalue  
         
         
         
@@ -103,12 +107,12 @@ class PumpkinCounter():
         img_shape = labels_im.shape
         BlobCounts = np.zeros(numlabels)
         Blobs=dict()
-        for x in range(img_shape[0]):
-            for y in range(img_shape[1]):
-                if labels_im[x, y] == 0:
+        for y in range(img_shape[0]):
+            for x in range(img_shape[1]):
+                if labels_im[y, x] == 0:
                     continue
 
-                blob_label = labels_im[x, y]
+                blob_label = labels_im[y,x]
                 if blob_label in Blobs.keys():
                     Blobs[blob_label].append(np.array([x, y]))
                 else:
@@ -154,11 +158,10 @@ class PumpkinCounter():
         return contours
 
     
-    def __annotateImage(self,annotated_image,contours):
-        
+    def __annotateImage(self, annotated_image, contours, min_overlap, max_overlap):
         if annotated_image.dtype != "uint8":
             annotated_image = annotated_image.astype("uint8")
-    
+
         annotated_image = cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
 
         # Draw a circle above the center of each of the detected contours.
@@ -167,6 +170,8 @@ class PumpkinCounter():
             if M['m00'] != 0:
                 cx = int(M['m10'] / M['m00'])
                 cy = int(M['m01'] / M['m00'])
+                if (cx < min_overlap[1] or cx > max_overlap[1] or cy < min_overlap[0] or cy > max_overlap[0]):
+                    self.countour_decrease += 1
                 cv2.circle(annotated_image, (cx, cy), 3, (0, 0, 255), 2)
             else:
                 if self._verbose:
@@ -174,7 +179,7 @@ class PumpkinCounter():
                 # Handle the case where m00 is zero if necessary
 
         # print("Number of detected balls: %d" % len(contours))
-
+        
         return annotated_image
 
 
@@ -194,8 +199,8 @@ def __DebugLoadTestImage(filename=None,tiff=False):
 if __name__=="__main__":
     Pc=PumpkinCounter(verbose=True)
     testImg=__DebugLoadTestImage()
-    mins=np.array((0,0))
-    maxs=np.array((testImg.shape[0]-0,testImg.shape[1]-0))
+    mins=np.array((10,10))
+    maxs=np.array((testImg.shape[0]-10,testImg.shape[1]-10))
     print(Pc.ProcessImage(testImg,mins,maxs))
     img, blob_count = Pc.processImageContours(testImg)
     print(blob_count)

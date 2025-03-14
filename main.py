@@ -10,11 +10,12 @@ def main():
     total_pumpkins=0
     blob_count = 0
     ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=False)
-    Pc=PumpkinCounter(verbose=False)
+    Pc=PumpkinCounter(verbose=False)  
+    slices = (4, 4)
 
-    for i in range(4):
-        for j in range(4):
-            tile, mins , maxs = ortho_splitter.orthosplit_to_image(index=(i, j),overlap=10)
+    for i in range(slices[0]):
+        for j in range(slices[1]):
+            tile, mins , maxs = ortho_splitter.orthosplit_to_image(slices=slices , index=(i, j),overlap=0)
             img =  cv2.cvtColor(tile, cv2.COLOR_BGR2RGB).astype("float")
 
             # Apply blur 
@@ -22,11 +23,12 @@ def main():
             
             mins=np.array((mins[0],mins[1]))
             maxs=np.array((maxs[0],maxs[1]))
+            print(f" min {mins} max {maxs}")    
             
             no_of_pumpkins= Pc.ProcessImage(img,mins,maxs)
             total_pumpkins+=no_of_pumpkins
             
-            annotated_image, blob_count_pumpkin = Pc.processImageContours(img)
+            annotated_image, blob_count_pumpkin = Pc.processImageContours(img,mins,maxs)
             blob_count+=blob_count_pumpkin
             
             print(f"Mahal Count: Tile {i}_{j} has {no_of_pumpkins} pumpkins")
@@ -43,7 +45,7 @@ def main():
     field_img = cv2.cvtColor(field, cv2.COLOR_BGR2RGB).astype("float")
     no_of_pumpkins = Pc.ProcessImage(field_img, (0,0), (field_img.shape[0],field_img.shape[1]))
     print(f"Mahal Count: Field has {no_of_pumpkins} pumpkins")
-    annotated_image, blob_count_pumpkin = Pc.processImageContours(field_img)
+    annotated_image, blob_count_pumpkin = Pc.processImageContours(field_img,mins=(0,0),maxs=(field_img.shape[0],field_img.shape[1]))
     
     # cv2.imwrite(os.path.join(annotated_path, "field_annotated.tif"), annotated_image)
     print(f"Blob Count: Field has {blob_count_pumpkin} pumpkins")

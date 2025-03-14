@@ -195,8 +195,16 @@ class OrthoSplitter:
             print(f"Image Shape: {img_cv.shape}")
         
         return img_cv
-
-    def orthosplit_to_image(self, index=(0, 0), overlap=0):
+    
+    def image_to_tile(self, img):
+        """
+        Convert an image to a tile
+        """
+        
+        
+        return tile
+    
+    def orthosplit_to_image(self, index=(0, 0), overlap=0, slices = (4, 4)):
         """
         Convert the orthophoto so slices
         and return a tile as an image
@@ -205,7 +213,7 @@ class OrthoSplitter:
         if self.verbose: print("Ortho loaded")
         self.crop_field()
         if self.verbose: print("Field cropped")
-        tile, min, max = self.split_field(index=index, overlap=overlap)   
+        tile, min, max = self.split_field(slices = slices, index=index, overlap=overlap)   
         if self.verbose: print(f"Tile created: {tile.shape} at index {index} with overlap {overlap}%")
         if self.verbose: print(f"Min overlap: {min}, Max overlap: {max}")   
         img = self.tile_to_image(tile=tile)
