@@ -135,8 +135,8 @@ class OrthoSplitter:
             # print(f"Window shape: {window.height, window.width}")
             # print(f"Window offset: {window.row_off, window.col_off}")
 
-        min_overlap = (overlap_r_top, overlap_c_left)
-        max_overlap = (overlap_r_bottom, overlap_c_right)
+        min_overlap = (0 - overlap_r_top ,0 - overlap_c_left)
+        max_overlap = ( window.height - overlap_r_bottom , window.width - overlap_c_right)
         
         return tile, min_overlap, max_overlap
 
@@ -206,16 +206,17 @@ class OrthoSplitter:
         self.crop_field()
         if self.verbose: print("Field cropped")
         tile, min, max = self.split_field(index=index, overlap=overlap)   
-        if self.verbose: print(f"Tile created: {tile.shape} at index {index} with overlap {overlap}%")   
+        if self.verbose: print(f"Tile created: {tile.shape} at index {index} with overlap {overlap}%")
+        if self.verbose: print(f"Min overlap: {min}, Max overlap: {max}")   
         img = self.tile_to_image(tile=tile)
         if self.verbose: print("Tile converted to image")   
         return img, min, max
 
 def main():
     ortho_splitter = OrthoSplitter(ortho_file, output_file, verbose=True)
-    img = ortho_splitter.orthosplit_to_image(overlap=5, index=(1, 1))
+    img, min, max = ortho_splitter.orthosplit_to_image(overlap=1, index=(0, 0))
     cv.imwrite("tile_image.png", img)
-    ortho_splitter.write_tile(all_tiles=False, overlap=2.5) 
+    ortho_splitter.write_tile(all_tiles=False, overlap=1) 
     # ortho_splitter.combine_tiles()
 
 
